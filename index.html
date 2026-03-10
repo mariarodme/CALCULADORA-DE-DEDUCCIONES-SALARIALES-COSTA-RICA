@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora Salarial Costa Rica</title>
+<meta name="description" content="Calculadora de deducciones salariales Costa Rica - CCSS, Impuesto de Renta - por mariarodme">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f0e8;
+    --surface: #fffdf9;
+    --surface2: #faf6ee;
+    --border: #e0d8c8;
+    --border2: #ccc4b0;
+    --text: #1a1612;
+    --text2: #5a5248;
+    --text3: #8a8078;
+    --accent: #c8401a;
+    --accent2: #e85d30;
+    --green: #1a6b3c;
+    --green-bg: #eaf5ef;
+    --red-bg: #fdf0ec;
+    --gold: #b8860b;
+    --gold-bg: #fdf8ec;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 40px 20px 60px;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      radial-gradient(circle at 20% 20%, rgba(200,64,26,0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(26,107,60,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .flag-bar {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .flag-bar span {
+    display: block;
+    height: 4px;
+    border-radius: 2px;
+  }
+  .flag-bar .f1 { width: 60px; background: #1a4b8c; }
+  .flag-bar .f2 { width: 24px; background: #c8001a; }
+  .flag-bar .f3 { width: 60px; background: #1a4b8c; }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    color: var(--text);
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: 0.875rem;
+    color: var(--text3);
+    margin-top: 8px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+    animation: fadeUp 0.6s ease both 0.1s;
+  }
+
+  .card-section {
+    padding: 28px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text3);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Input group */
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 540px) { .input-row { grid-template-columns: 1fr; } }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text2);
+    letter-spacing: 0.2px;
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+  .currency-symbol {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text3);
+    pointer-events: none;
+  }
+  .pct-symbol {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text3);
+    pointer-events: none;
+  }
+
+  input[type="number"], input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.95rem;
+    background: var(--surface2);
+    color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input.with-prefix { padding-left: 30px; }
+  input.with-suffix { padding-right: 36px; }
+
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200,64,26,0.1);
+    background: var(--surface);
+  }
+
+  /* Salary input highlight */
+  .salary-input input {
+    font-size: 1.15rem;
+    font-weight: 500;
+    padding: 13px 12px 13px 30px;
+    border-color: var(--border2);
+  }
+
+  /* Deducciones table */
+  .ded-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .ded-table tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .ded-table tr:last-child { border-bottom: none; }
+  .ded-table tr:hover { background: var(--surface2); }
+
+  .ded-table td {
+    padding: 10px 4px;
+    font-size: 0.875rem;
+    vertical-align: middle;
+  }
+  .ded-table .col-name { color: var(--text2); width: 50%; }
+  .ded-table .col-pct {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text3);
+    text-align: center;
+    width: 15%;
+  }
+  .ded-table .col-amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.875rem;
+    text-align: right;
+    color: var(--accent);
+    width: 35%;
+    font-weight: 500;
+  }
+  .ded-table .col-amount.zero { color: var(--text3); }
+
+  .ded-group-header td {
+    padding: 14px 4px 6px;
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text3);
+    font-weight: 500;
+    background: none !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  .ded-table .sub-item .col-name {
+    padding-left: 16px;
+    font-size: 0.825rem;
+    color: var(--text3);
+  }
+
+  .ded-table .total-row td {
+    padding: 12px 4px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text);
+    border-top: 2px solid var(--border2) !important;
+  }
+  .ded-table .total-row .col-pct {
+    font-weight: 600;
+    color: var(--text2);
+  }
+  .ded-table .total-row .col-amount {
+    color: var(--accent);
+    font-size: 0.95rem;
+  }
+
+  /* Editable pct input in table */
+  .pct-input-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  .pct-input-wrap input {
+    width: 56px;
+    padding: 4px 6px;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    font-family: 'DM Mono', monospace;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+  .pct-input-wrap input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(200,64,26,0.1);
+    background: var(--surface);
+  }
+  .pct-input-wrap span {
+    font-size: 0.75rem;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Impuesto renta sub rows */
+  .renta-row td.col-name { padding-left: 16px; font-size: 0.78rem; color: var(--text3); line-height: 1.4; }
+  .renta-row td.col-amount { font-size: 0.78rem; }
+
+  /* Result block */
+  .result-block {
+    background: linear-gradient(135deg, var(--green) 0%, #0f5c30 100%);
+    border-radius: 12px;
+    padding: 28px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-block::before {
+    content: '₡';
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'DM Serif Display', serif;
+    font-size: 7rem;
+    opacity: 0.07;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .result-label {
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.7;
+    margin-bottom: 8px;
+  }
+  .result-amount {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+  .result-sub {
+    margin-top: 16px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .result-sub-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .result-sub-item span:first-child {
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.6;
+  }
+  .result-sub-item span:last-child {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.95rem;
+    font-weight: 500;
+    opacity: 0.9;
+  }
+
+  /* Actions */
+  .actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    padding: 20px 32px;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1.5px solid transparent;
+    outline: none;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover { background: var(--accent2); border-color: var(--accent2); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(200,64,26,0.25); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--text2);
+    border-color: var(--border2);
+  }
+  .btn-secondary:hover { background: var(--surface); border-color: var(--text3); color: var(--text); }
+  .btn-print {
+    background: var(--green);
+    color: white;
+    border-color: var(--green);
+  }
+  .btn-print:hover { background: #155c32; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,107,60,0.25); }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .amount-update {
+    animation: flash 0.4s ease;
+  }
+  @keyframes flash {
+    0% { opacity: 1; }
+    30% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+
+  /* Tooltip */
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    margin-left: 4px;
+    cursor: help;
+  }
+  .tooltip-icon {
+    width: 14px;
+    height: 14px;
+    background: var(--border2);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: var(--text2);
+    font-weight: 600;
+  }
+  .tooltip-text {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: white;
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tooltip:hover .tooltip-text { opacity: 1; }
+
+  /* Print */
+  @media print {
+    body { background: white; padding: 20px; }
+    body::before { display: none; }
+    .actions { display: none; }
+    header { margin-bottom: 20px; }
+    .card { box-shadow: none; border: 1px solid #ddd; }
+    .btn { display: none; }
+  }
+
+  /* Tag badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+  }
+  .badge-ccss { background: var(--red-bg); color: var(--accent); }
+  .badge-renta { background: var(--gold-bg); color: var(--gold); }
+
+  .nombre-field {
+    margin-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="flag-bar">
+      <span class="f1"></span>
+      <span class="f2"></span>
+      <span class="f1"></span>
+    </div>
+    <h1>Calculadora de<br><em>Deducciones Salariales</em></h1>
+    <p class="subtitle">Costa Rica · Planilla Mensual</p>
+  </header>
+  </header>
+
+  <div class="card">
+
+    <!-- Datos del colaborador -->
+    <div class="card-section">
+      <div class="section-label">Datos del colaborador</div>
+      <div class="input-row">
+        <div class="field">
+          <label for="nombre">Nombre completo</label>
+          <input type="text" id="nombre" placeholder="Ej. María Pérez González">
+        </div>
+        <div class="field">
+          <label for="puesto">Puesto</label>
+          <input type="text" id="puesto" placeholder="Ej. Recepcionista">
+        </div>
+        <div class="field salary-input">
+          <label for="salario">Salario Bruto Mensual</label>
+          <div class="input-wrap">
+            <span class="currency-symbol">₡</span>
+            <input type="number" id="salario" class="with-prefix" placeholder="0" min="0" step="1000">
+          </div>
+        </div>
+        <div class="field">
+          <label for="periodo">Período</label>
+          <input type="month" id="periodo" style="padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 0.875rem; background: var(--surface2); color: var(--text); outline: none; width: 100%;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Deducciones CCSS -->
+    <div class="card-section">
+      <div class="section-label">Deducciones empleado <span class="badge badge-ccss">CCSS 10.83%</span></div>
+      <table class="ded-table">
+        <tbody>
+          <tr>
+            <td class="col-name">Seguro de Enfermedad y Maternidad (SEM)</td>
+            <td class="col-pct"><span class="fixed-pct">5.50%</span></td>
+            <td class="col-amount" id="sem-amt">₡0.00</td>
+          </tr>
+          <tr>
+            <td class="col-name">Invalidez, Vejez y Muerte (IVM)</td>
+            <td class="col-pct"><span class="fixed-pct">4.33%</span></td>
+            <td class="col-amount" id="ivm-amt">₡0.00</td>
+          </tr>
+          <tr>
+            <td class="col-name">Aporte Banco Popular</td>
+            <td class="col-pct"><span class="fixed-pct">1.00%</span></td>
+            <td class="col-amount" id="bp-amt">₡0.00</td>
+          </tr>
+          <tr class="total-row">
+            <td class="col-name" style="font-weight:600;">Total CCSS Empleado</td>
+            <td class="col-pct">10.83%</td>
+            <td class="col-amount" id="ccss-total">₡0.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Impuesto de Renta -->
+    <div class="card-section">
+      <div class="section-label">Impuesto sobre la Renta <span class="badge badge-renta">Art. 33 LISR</span></div>
+      <table class="ded-table">
+        <tbody>
+          <tr class="renta-row">
+            <td class="col-name">Hasta ₡918,000.00 — exento</td>
+            <td class="col-pct">0%</td>
+            <td class="col-amount zero" id="r0-amt">₡0.00</td>
+          </tr>
+          <tr class="renta-row">
+            <td class="col-name">Exceso de ₡918,000 hasta ₡1,347,000</td>
+            <td class="col-pct">10%</td>
+            <td class="col-amount" id="r10-amt">₡0.00</td>
+          </tr>
+          <tr class="renta-row">
+            <td class="col-name">Exceso de ₡1,347,000 hasta ₡2,364,000</td>
+            <td class="col-pct">15%</td>
+            <td class="col-amount" id="r15-amt">₡0.00</td>
+          </tr>
+          <tr class="renta-row">
+            <td class="col-name">Exceso de ₡2,364,000 hasta ₡4,727,000</td>
+            <td class="col-pct">20%</td>
+            <td class="col-amount" id="r20-amt">₡0.00</td>
+          </tr>
+          <tr class="renta-row">
+            <td class="col-name">Exceso de ₡4,727,000</td>
+            <td class="col-pct">25%</td>
+            <td class="col-amount" id="r25-amt">₡0.00</td>
+          </tr>
+          <tr class="total-row">
+            <td class="col-name" style="font-weight:600;">Total Impuesto Renta</td>
+            <td class="col-pct" id="renta-pct-total">—</td>
+            <td class="col-amount" id="renta-total">₡0.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Otras deducciones -->
+    <div class="card-section">
+      <div class="section-label">Otras deducciones</div>
+      <table class="ded-table">
+        <tbody>
+          <tr>
+            <td class="col-name">
+              Asociación Solidarista
+              <span class="tooltip"><span class="tooltip-icon">?</span><span class="tooltip-text">Porcentaje opcional según acuerdo</span></span>
+            </td>
+            <td class="col-pct">
+              <div class="pct-input-wrap">
+                <input type="number" id="solidarista-pct" value="0" min="0" max="100" step="0.5">
+                <span>%</span>
+              </div>
+            </td>
+            <td class="col-amount" id="solidarista-amt">₡0.00</td>
+          </tr>
+          <tr>
+            <td class="col-name">Otros descuentos</td>
+            <td class="col-pct">
+              <div class="pct-input-wrap">
+                <input type="number" id="otros-pct" value="0" min="0" max="100" step="0.5">
+                <span>%</span>
+              </div>
+            </td>
+            <td class="col-amount" id="otros-amt">₡0.00</td>
+          </tr>
+          <tr>
+            <td class="col-name">Otros descuentos (monto fijo)</td>
+            <td class="col-pct" style="text-align:center;">
+              <span style="font-size:0.7rem; color:var(--text3); font-family:'DM Mono',monospace;">₡ fijo</span>
+            </td>
+            <td class="col-amount">
+              <div class="input-wrap" style="max-width:150px; margin-left:auto;">
+                <span class="currency-symbol" style="font-size:0.75rem;">₡</span>
+                <input type="number" id="otros-fijo" value="0" min="0" step="100" class="with-prefix" style="width:150px; padding: 5px 8px 5px 22px; font-size:0.8rem; text-align:right;">
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Resumen -->
+    <div class="card-section">
+      <div class="section-label">Resumen</div>
+      <table class="ded-table">
+        <tbody>
+          <tr>
+            <td class="col-name" style="font-weight:500;">Salario Bruto</td>
+            <td class="col-pct">100%</td>
+            <td class="col-amount" id="bruto-display" style="color:var(--text);">₡0.00</td>
+          </tr>
+          <tr>
+            <td class="col-name">Total CCSS empleado</td>
+            <td class="col-pct">10.83%</td>
+            <td class="col-amount" id="ccss-resumen">₡0.00</td>
+          </tr>
+          <tr>
+            <td class="col-name">Impuesto de Renta</td>
+            <td class="col-pct" id="renta-resumen-pct">—</td>
+            <td class="col-amount" id="renta-resumen">₡0.00</td>
+          </tr>
+          <tr>
+            <td class="col-name">Solidarista + Otros</td>
+            <td class="col-pct" id="otros-resumen-pct">—</td>
+            <td class="col-amount" id="otros-resumen">₡0.00</td>
+          </tr>
+          <tr class="total-row">
+            <td class="col-name" style="font-weight:700; font-size:1rem;">Total Deducciones</td>
+            <td class="col-pct" id="total-ded-pct" style="font-weight:700;">—</td>
+            <td class="col-amount" id="total-ded-amt">₡0.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Salario Neto -->
+    <div class="card-section" style="background: var(--surface2);">
+      <div class="result-block">
+        <div class="result-label">Salario Neto a Recibir</div>
+        <div class="result-amount" id="neto-display">₡0.00</div>
+        <div class="result-sub">
+          <div class="result-sub-item">
+            <span>Salario Bruto</span>
+            <span id="bruto-sub">₡0.00</span>
+          </div>
+          <div class="result-sub-item">
+            <span>Total Deducciones</span>
+            <span id="ded-sub">₡0.00</span>
+          </div>
+          <div class="result-sub-item">
+            <span>% Deducido</span>
+            <span id="pct-sub">0.00%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="resetForm()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Limpiar
+      </button>
+      <button class="btn btn-print" onclick="imprimirRecibo()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir recibo
+      </button>
+      <button class="btn btn-primary" onclick="descargarHTML()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar colilla
+      </button>
+    </div>
+
+  </div>
+</div>
+
+  <div style="text-align:center; margin-top:28px; font-family:'DM Mono',monospace; font-size:0.72rem; color:var(--text3); letter-spacing:0.5px; animation: fadeUp 0.6s ease both 0.5s;">
+    Diseñado y creado por <span style="color:var(--accent); font-weight:600;">mariarodme</span> &nbsp;·&nbsp; Costa Rica
+  </div>
+
+<script>
+  // ---- CONSTANTS ----
+  const SEM = 0.055;
+  const IVM = 0.0433;
+  const BP  = 0.01;
+  const RENTA_TRAMOS = [
+    { desde: 0,          hasta: 918000,    tasa: 0 },
+    { desde: 918000,     hasta: 1347000,   tasa: 0.10 },
+    { desde: 1347000,    hasta: 2364000,   tasa: 0.15 },
+    { desde: 2364000,    hasta: 4727000,   tasa: 0.20 },
+    { desde: 4727000,    hasta: Infinity,  tasa: 0.25 },
+  ];
+
+  const fmt = v => '₡' + v.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtPct = v => v.toFixed(2) + '%';
+
+  function calcRenta(bruto) {
+    let total = 0;
+    const partes = [];
+    for (const t of RENTA_TRAMOS) {
+      if (bruto <= t.desde) { partes.push(0); continue; }
+      const base = Math.min(bruto, t.hasta === Infinity ? bruto : t.hasta) - t.desde;
+      const imp = base * t.tasa;
+      partes.push(imp);
+      total += imp;
+    }
+    return { total, partes };
+  }
+
+  function calcular() {
+    const bruto = parseFloat(document.getElementById('salario').value) || 0;
+    const solidPct = (parseFloat(document.getElementById('solidarista-pct').value) || 0) / 100;
+    const otrosPct = (parseFloat(document.getElementById('otros-pct').value) || 0) / 100;
+    const otrosFijo = parseFloat(document.getElementById('otros-fijo').value) || 0;
+
+    // CCSS
+    const sem = bruto * SEM;
+    const ivm = bruto * IVM;
+    const bp  = bruto * BP;
+    const ccss = sem + ivm + bp;
+
+    // Renta (sobre salario bruto - CCSS empleado)
+    const baseRenta = Math.max(0, bruto - ccss);
+    const renta = calcRenta(baseRenta);
+
+    // Otros
+    const solid = bruto * solidPct;
+    const otros = bruto * otrosPct;
+    const otrosTotal = solid + otros + otrosFijo;
+
+    const totalDed = ccss + renta.total + otrosTotal;
+    const neto = bruto - totalDed;
+    const pctDed = bruto > 0 ? (totalDed / bruto) * 100 : 0;
+
+    // Update DOM
+    setAmt('sem-amt', sem);
+    setAmt('ivm-amt', ivm);
+    setAmt('bp-amt', bp);
+    setAmt('ccss-total', ccss);
+
+    setAmt('r0-amt', renta.partes[0], true);
+    setAmt('r10-amt', renta.partes[1]);
+    setAmt('r15-amt', renta.partes[2]);
+    setAmt('r20-amt', renta.partes[3]);
+    setAmt('r25-amt', renta.partes[4]);
+    setAmt('renta-total', renta.total);
+    document.getElementById('renta-pct-total').textContent = bruto > 0 ? fmtPct((renta.total/bruto)*100) : '—';
+
+    setAmt('solidarista-amt', solid);
+    setAmt('otros-amt', otros);
+
+    setAmt('bruto-display', bruto, false, true);
+    setAmt('ccss-resumen', ccss);
+    setAmt('renta-resumen', renta.total);
+    document.getElementById('renta-resumen-pct').textContent = bruto > 0 ? fmtPct((renta.total/bruto)*100) : '—';
+    setAmt('otros-resumen', otrosTotal);
+    document.getElementById('otros-resumen-pct').textContent = bruto > 0 ? fmtPct((otrosTotal/bruto)*100) : '—';
+
+    setAmt('total-ded-amt', totalDed);
+    document.getElementById('total-ded-pct').textContent = bruto > 0 ? fmtPct(pctDed) : '—';
+
+    // Result
+    document.getElementById('neto-display').textContent = fmt(neto);
+    document.getElementById('bruto-sub').textContent = fmt(bruto);
+    document.getElementById('ded-sub').textContent = fmt(totalDed);
+    document.getElementById('pct-sub').textContent = fmtPct(pctDed);
+  }
+
+  function setAmt(id, val, zero = false, blue = false) {
+    const el = document.getElementById(id);
+    el.textContent = fmt(val);
+    if (zero || val === 0) {
+      el.classList.toggle('zero', val === 0);
+    }
+    el.classList.add('amount-update');
+    setTimeout(() => el.classList.remove('amount-update'), 400);
+  }
+
+  function resetForm() {
+    document.getElementById('salario').value = '';
+    document.getElementById('solidarista-pct').value = 0;
+    document.getElementById('otros-pct').value = 0;
+    document.getElementById('otros-fijo').value = 0;
+    calcular();
+  }
+
+  // Set default period
+  const now = new Date();
+  document.getElementById('periodo').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+  // Listen for changes
+  document.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', calcular);
+  });
+
+  calcular();
+
+  // Print receipt
+  function imprimirRecibo() { window.print(); }
+
+  // Download HTML colilla
+  function descargarHTML() {
+    const nombre = document.getElementById('nombre').value || 'Colaborador';
+    const puesto = document.getElementById('puesto').value || '';
+    const periodo = document.getElementById('periodo').value || '';
+    const bruto = parseFloat(document.getElementById('salario').value) || 0;
+
+    const solidPct = (parseFloat(document.getElementById('solidarista-pct').value) || 0) / 100;
+    const otrosPct = (parseFloat(document.getElementById('otros-pct').value) || 0) / 100;
+    const otrosFijo = parseFloat(document.getElementById('otros-fijo').value) || 0;
+
+    const sem = bruto * SEM;
+    const ivm = bruto * IVM;
+    const bp  = bruto * BP;
+    const ccss = sem + ivm + bp;
+    const baseRenta = Math.max(0, bruto - ccss);
+    const renta = calcRenta(baseRenta);
+    const solid = bruto * solidPct;
+    const otros = bruto * otrosPct;
+    const otrosTotal = solid + otros + otrosFijo;
+    const totalDed = ccss + renta.total + otrosTotal;
+    const neto = bruto - totalDed;
+    const pctDed = bruto > 0 ? (totalDed / bruto) * 100 : 0;
+
+    const [year, month] = periodo.split('-');
+    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const periodoTexto = year && month ? `${meses[parseInt(month)-1]} ${year}` : '';
+
+    const html = `<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<title>Colilla de Pago - ${nombre}</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{font-family:'DM Sans',sans-serif;background:#f5f0e8;padding:40px 20px;color:#1a1612;}
+.colilla{max-width:600px;margin:0 auto;background:#fffdf9;border:1px solid #e0d8c8;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);}
+.header{background:linear-gradient(135deg,#1a1612,#3a3028);color:white;padding:28px 32px;display:flex;justify-content:space-between;align-items:flex-start;}
+.header h2{font-family:'DM Serif Display',serif;font-size:1.4rem;margin:0 0 4px;}
+.header .sub{font-family:'DM Mono',monospace;font-size:.75rem;opacity:.6;letter-spacing:.5px;}
+.header .periodo{text-align:right;}
+.header .periodo .mes{font-family:'DM Serif Display',serif;font-size:1.1rem;}
+.body{padding:24px 32px;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #e0d8c8;}
+.info-item label{font-size:.7rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;color:#8a8078;display:block;margin-bottom:2px;}
+.info-item span{font-size:.9rem;font-weight:500;}
+table{width:100%;border-collapse:collapse;margin-bottom:16px;}
+tr{border-bottom:1px solid #f0ebe0;}
+td{padding:8px 4px;font-size:.85rem;vertical-align:middle;}
+.col-n{color:#5a5248;width:55%;}
+.col-p{font-family:'DM Mono',monospace;font-size:.78rem;color:#8a8078;text-align:center;width:15%;}
+.col-a{font-family:'DM Mono',monospace;font-size:.85rem;text-align:right;color:#c8401a;width:30%;font-weight:500;}
+.col-a.z{color:#8a8078;}
+.sec{font-size:.65rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1.5px;color:#8a8078;padding:12px 4px 4px;border-bottom:1px solid #e0d8c8 !important;font-weight:500;}
+.tot td{font-weight:700;font-size:.9rem;border-top:2px solid #ccc4b0 !important;}
+.tot .col-a{color:#c8401a;font-size:.95rem;}
+.neto{background:linear-gradient(135deg,#1a6b3c,#0f5c30);border-radius:12px;padding:24px;color:white;margin-top:4px;position:relative;overflow:hidden;}
+.neto::after{content:'₡';position:absolute;right:20px;top:50%;transform:translateY(-50%);font-family:'DM Serif Display',serif;font-size:6rem;opacity:.07;}
+.neto .lbl{font-size:.65rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:2px;opacity:.65;margin-bottom:6px;}
+.neto .amt{font-family:'DM Serif Display',serif;font-size:2.2rem;letter-spacing:-1px;}
+.neto .meta{display:flex;gap:20px;margin-top:12px;flex-wrap:wrap;}
+.neto .meta-item{display:flex;flex-direction:column;gap:1px;}
+.neto .meta-item span:first-child{font-size:.65rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;opacity:.6;}
+.neto .meta-item span:last-child{font-family:'DM Mono',monospace;font-size:.85rem;opacity:.9;}
+.footer{background:#f5f0e8;padding:16px 32px;text-align:center;font-size:.7rem;font-family:'DM Mono',monospace;color:#8a8078;letter-spacing:.5px;}
+@media print{body{background:white;padding:10px;}@page{margin:10mm;}}
+</style></head>
+<body>
+<div class="colilla">
+<div class="header">
+  <div>
+    <div class="sub">COLILLA DE PAGO</div>
+    <h2>Comprobante Salarial</h2>
+    <div class="sub">Costa Rica · CCSS</div>
+  </div>
+  <div class="periodo">
+    <div class="sub">PERÍODO</div>
+    <div class="mes">${periodoTexto}</div>
+  </div>
+</div>
+<div class="body">
+  <div class="info-grid">
+    <div class="info-item"><label>Colaborador</label><span>${nombre}</span></div>
+    <div class="info-item"><label>Puesto</label><span>${puesto || '—'}</span></div>
+    <div class="info-item"><label>Salario Bruto</label><span style="font-family:'DM Mono',monospace;font-size:1rem;color:#c8401a;">${fmt(bruto)}</span></div>
+    <div class="info-item"><label>Fecha emisión</label><span>${new Date().toLocaleDateString('es-CR')}</span></div>
+  </div>
+
+  <table>
+    <tr><td colspan="3" class="sec">Deducciones CCSS (Empleado 10.83%)</td></tr>
+    <tr><td class="col-n">Seguro de Enfermedad y Maternidad (SEM)</td><td class="col-p">5.50%</td><td class="col-a">${fmt(sem)}</td></tr>
+    <tr><td class="col-n">Invalidez, Vejez y Muerte (IVM)</td><td class="col-p">4.33%</td><td class="col-a">${fmt(ivm)}</td></tr>
+    <tr><td class="col-n">Aporte Banco Popular</td><td class="col-p">1.00%</td><td class="col-a">${fmt(bp)}</td></tr>
+    <tr class="tot"><td class="col-n">Total CCSS</td><td class="col-p">10.83%</td><td class="col-a">${fmt(ccss)}</td></tr>
+  </table>
+
+  <table>
+    <tr><td colspan="3" class="sec">Impuesto sobre la Renta</td></tr>
+    <tr><td class="col-n">Hasta ₡918,000 — exento</td><td class="col-p">0%</td><td class="col-a z">${fmt(0)}</td></tr>
+    <tr><td class="col-n">Exceso de ₡918,000 a ₡1,347,000</td><td class="col-p">10%</td><td class="col-a ${renta.partes[1]===0?'z':''}">${fmt(renta.partes[1])}</td></tr>
+    <tr><td class="col-n">Exceso de ₡1,347,000 a ₡2,364,000</td><td class="col-p">15%</td><td class="col-a ${renta.partes[2]===0?'z':''}">${fmt(renta.partes[2])}</td></tr>
+    <tr><td class="col-n">Exceso de ₡2,364,000 a ₡4,727,000</td><td class="col-p">20%</td><td class="col-a ${renta.partes[3]===0?'z':''}">${fmt(renta.partes[3])}</td></tr>
+    <tr><td class="col-n">Exceso de ₡4,727,000</td><td class="col-p">25%</td><td class="col-a ${renta.partes[4]===0?'z':''}">${fmt(renta.partes[4])}</td></tr>
+    <tr class="tot"><td class="col-n">Total Renta</td><td class="col-p">${bruto>0?fmtPct((renta.total/bruto)*100):'—'}</td><td class="col-a">${fmt(renta.total)}</td></tr>
+  </table>
+
+  ${otrosTotal > 0 ? `<table>
+    <tr><td colspan="3" class="sec">Otras Deducciones</td></tr>
+    ${solid>0?`<tr><td class="col-n">Asociación Solidarista</td><td class="col-p">${fmtPct(solidPct*100)}</td><td class="col-a">${fmt(solid)}</td></tr>`:''}
+    ${otros>0?`<tr><td class="col-n">Otros (%)</td><td class="col-p">${fmtPct(otrosPct*100)}</td><td class="col-a">${fmt(otros)}</td></tr>`:''}
+    ${otrosFijo>0?`<tr><td class="col-n">Otros (monto fijo)</td><td class="col-p">—</td><td class="col-a">${fmt(otrosFijo)}</td></tr>`:''}
+    <tr class="tot"><td class="col-n">Subtotal Otros</td><td class="col-p">${bruto>0?fmtPct((otrosTotal/bruto)*100):'—'}</td><td class="col-a">${fmt(otrosTotal)}</td></tr>
+  </table>` : ''}
+
+  <table>
+    <tr><td class="col-n" style="font-size:.9rem;font-weight:600;">Total Deducciones</td><td class="col-p" style="font-weight:700;">${fmtPct(pctDed)}</td><td class="col-a" style="font-size:.9rem;font-weight:700;">${fmt(totalDed)}</td></tr>
+  </table>
+
+  <div class="neto">
+    <div class="lbl">Salario Neto a Recibir</div>
+    <div class="amt">${fmt(neto)}</div>
+    <div class="meta">
+      <div class="meta-item"><span>Salario Bruto</span><span>${fmt(bruto)}</span></div>
+      <div class="meta-item"><span>Total Deducciones</span><span>${fmt(totalDed)}</span></div>
+      <div class="meta-item"><span>% Deducido</span><span>${fmtPct(pctDed)}</span></div>
+    </div>
+  </div>
+</div>
+<div class="footer">Documento generado el ${new Date().toLocaleDateString('es-CR')} · Solo para uso informativo</div>
+</div>
+</body></html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `colilla-pago-${nombre.replace(/\s+/g,'-').toLowerCase()}-${periodo || 'sin-fecha'}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
